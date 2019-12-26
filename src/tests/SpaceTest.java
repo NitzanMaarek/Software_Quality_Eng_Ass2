@@ -1,67 +1,105 @@
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import system.*;
-
-import java.util.LinkedList;
+import system.FileSystem;
+import system.Leaf;
+import system.OutOfSpaceException;
 
 import static org.junit.Assert.*;
 
 public class SpaceTest {
 
-    Leaf[] blocks;
-    LinkedList<Integer> freeBlocks;
-    static FileSystem fs;
-    static String[][] files;
-    static int diskSize = 100;
-
+    FileSystem fs;
+    Integer fsSize = 10;
 
     @Before
-    public void initializingBeforeAlloc() throws BadFileNameException, OutOfSpaceException {
-        fs = new FileSystem(diskSize);    //Disk space initialized to 100 blocks.
-        int n = diskSize/2;
-        files = new String[n][];
-        for (int i = 0; i < n; i++){
-            String[] filePath = new String[2];
-            filePath[0] = "root";
-            filePath[1] = "file"+i;
-            files[i] = filePath;
-        }
-        for (int i = 0; i < n; i++) {
-            fs.file(files[i],2);
-        }
-    }
+    public void setUp() throws Exception {
+        this.fs = new FileSystem(fsSize);
 
-    @Test
-    public void alloc() throws OutOfSpaceException {
-        int spaceAllocated = 0;
-        String[][] disk = fs.disk();
-        for(int i=0; i < disk.length; i++){
-            if(disk[i] != null){
-                spaceAllocated++;
-            }
-        }
-        assertEquals("Disk allocated space should be 100.", diskSize, spaceAllocated);
+        String[] path1 = {"root", "dir1", "dir2"};
+        this.fs.dir(path1);
+
+        String[] path2 = {"root", "dir3", "dir4"};
+        this.fs.dir(path2);
+
+        String[] firstFilePath = {"root", "dir3", "dir4", "video"};
+        this.fs.file(firstFilePath, 2);
+
+        String[] secondFilePath = {"root", "dir1", "dir2", "image"};
+        this.fs.file(secondFilePath, 5);
     }
 
     @After
-    public void cleanFilesAfterAllocTest(){
-        int n = diskSize/2;
-        for (int i = 0; i < n; i=i+2){
-            fs.rmfile(files[i]);
-            n--;
+    public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void firstAllocTest() {
+        Leaf[] blocks = fs.fileStorage.getAlloc();
+        String[][] disk = fs.disk();
+        // Check allocations for the 2 files that has been created
+        assertEquals("Allocations sizes should be equal.",disk.length, blocks.length);
+    }
+
+    @Test
+    public void secondAllocTest() throws OutOfSpaceException {
+        String[] filePath = {"root", "dir1", "dir2", "sound"};
+        try {
+            fs.file(filePath, 5);
+        } catch (Exception e) {
+            assertEquals("OutOfSpaceException should be thrown.", OutOfSpaceException.class, e.getClass());
+        }
+
+    }
+
+    @Test
+    public void thirdAllocTest() {
+        String[] filePath = {"root", "dir1", "dir2", "image"};
+        fs.rmfile(filePath);
+        String[] newFile= {"root", "dir1", "dir2", "exe"};
+        try {
+            fs.file(newFile, 8);
+            assertEquals("FreeSpace should be 0.", fs.fileStorage.countFreeSpace(), 0);
+        } catch (Exception e) {
         }
     }
 
     @Test
     public void dealloc() {
+        String[] filePath = {"root", "dir1", "dir2", "image"};
+        fs.rmfile(filePath);
+        try {
+            assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 8);
+        } catch (Exception e) {
+        }
     }
 
     @Test
     public void countFreeSpace() {
+        assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 3);
+    }
+
+    @Test
+    public void secondCountFreeSpace() {
+        String[] filePath = {"root", "dir1", "dir2", "kitty_picture"};
+        try {
+            fs.file(filePath, 1);
+        } catch (Exception e) {
+        }
+        assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 2);
     }
 
     @Test
     public void getAlloc() {
+        Leaf[] blocks = fs.fileStorage.getAlloc();
+        // First 7 blocks should be full, other should be null
+        for (int i = 0; i < blocks.length; i++) {
+            if (i < 7){
+                assertNotNull(blocks[i]);
+            } else {
+                assertNull("Shouldn't be null.", blocks[i]);
+            }
+
+        }
     }
 }
