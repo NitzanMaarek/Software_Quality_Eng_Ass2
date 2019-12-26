@@ -75,7 +75,7 @@ public class SpaceTest {
     }
 
     @Test
-    public void countFreeSpace() {
+    public void firstCountFreeSpace() {
         assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 3);
     }
 
@@ -90,7 +90,7 @@ public class SpaceTest {
     }
 
     @Test
-    public void getAlloc() {
+    public void firstGetAlloc() {
         Leaf[] blocks = fs.fileStorage.getAlloc();
         // First 7 blocks should be full, other should be null
         for (int i = 0; i < blocks.length; i++) {
@@ -99,7 +99,41 @@ public class SpaceTest {
             } else {
                 assertNull("Shouldn't be null.", blocks[i]);
             }
+        }
+    }
 
+
+    @Test
+    public void secondGetAlloc() {
+        String[] filePath = {"root", "dir1", "dir2", "image"};
+        fs.rmfile(filePath);
+
+        Leaf[] blocks = fs.fileStorage.getAlloc();
+        // First 7 blocks should be full, other should be null
+        for (int i = 0; i < blocks.length; i++) {
+            if (i < 2){
+                assertNotNull(blocks[i]);
+            } else {
+                assertNull("Shouldn't be null.", blocks[i]);
+            }
+        }
+    }
+
+     @Test
+    public void thirdGetAlloc() {
+        String[] filePath = {"root", "dir3", "dir4", "video"};
+        fs.rmfile(filePath);
+
+        Leaf[] blocks = fs.fileStorage.getAlloc();
+        // First 7 blocks should be full, other should be null
+        for (int i = 0; i < blocks.length; i++) {
+            if (i < 2) {
+                assertNull(blocks[i]);
+            } else if (i < 7){
+                assertNotNull("Shouldn't be null.", blocks[i]);
+            } else {
+                assertNull(blocks[i]);
+            }
         }
     }
 }
