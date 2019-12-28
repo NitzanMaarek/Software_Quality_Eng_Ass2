@@ -1,6 +1,7 @@
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import system.BadFileNameException;
 import system.FileSystem;
 import system.Leaf;
 import system.OutOfSpaceException;
@@ -65,8 +66,45 @@ public class SpaceTest {
     }
 
     @Test
+    public void fourthAllocTest() {
+        String[] path1 = {"root", "dir1", "dir2"};
+        try {
+            this.fs.dir(path1);
+        } catch (Exception e) {
+            assertEquals("Should raise a BadFileNameException", e.getClass(), BadFileNameException.class);
+        }
+
+    }
+
+
+    @Test
+    public void fifthAllocTest() {
+        String[] secondFilePath = {"root", "dir1", "dir2", "voice"};
+
+        try {
+            this.fs.file(secondFilePath, 10);
+        } catch (Exception e) {
+            assertEquals("Should raise an OutOfSpaceException", e.getClass(), OutOfSpaceException.class);
+        }
+
+    }
+
+
+
+    @Test
     public void dealloc() {
         String[] filePath = {"root", "dir1", "dir2", "image"};
+        fs.rmfile(filePath);
+        try {
+            assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 8);
+        } catch (Exception e) {
+        }
+    }
+
+    @Test
+    public void secondDealloc() {
+        String[] filePath = {"root", "dir1", "dir2", "image"};
+        fs.rmfile(filePath);
         fs.rmfile(filePath);
         try {
             assertEquals("FreeSpace should be 8.", fs.fileStorage.countFreeSpace(), 8);
