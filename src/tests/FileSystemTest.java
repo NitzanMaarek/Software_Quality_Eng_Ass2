@@ -25,6 +25,13 @@ public class FileSystemTest {
         fs.dir(path1);
         assertNotNull(fs.DirExists(path1));
 
+        try{
+            fs.dir(badPath);
+        }
+        catch (Exception e){
+            assertEquals(BadFileNameException.class, e.getClass());
+        }
+
         boolean dirPathFlag = false;
         try{
             fs.dir(path2);
@@ -37,12 +44,6 @@ public class FileSystemTest {
             assertFalse("Bug found-FileExists should return Node instead of Tree", dirPathFlag);
         }
 
-        try{
-            fs.dir(badPath);
-        }
-        catch (Exception e){
-            assertEquals(BadFileNameException.class, e.getClass());
-        }
     }
 
     @Test
@@ -134,6 +135,11 @@ public class FileSystemTest {
         fs.file(path,1);
         fs.rmfile(path);
         assertNull(fs.FileExists(path));
+
+        String[] pathDoesntExist = {"root", "doesntexist"};
+        fs.rmfile(pathDoesntExist);
+        assertNull(fs.FileExists(pathDoesntExist));
+
     }
 
     @Test
@@ -159,6 +165,10 @@ public class FileSystemTest {
         finally{
             assertTrue("Removing dir should fail-Not empty dir.", notEmptyDirFlag);
         }
+
+        String[] pathDoesntExist = {"root", "doesntexist"};
+        fs.rmdir(pathDoesntExist);
+        assertNull(fs.FileExists(pathDoesntExist));
     }
 
     @Test
